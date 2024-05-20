@@ -32,13 +32,6 @@ TipoCategoria VARCHAR(30),#PK
     PRIMARY KEY (TipoCategoria)
 );#Creada
 
-//
-CREATE TABLE Premio (
-    Puesto INT(3),#PK
-    Importe DECIMAL(10, 2),
-    PRIMARY KEY (Puesto)
-);#Creada
-
 CREATE TABLE Jug_Opta_Categ (
 	TipoCategoria VARCHAR(30),#PK, FK
     RangoI INT(5),#PK, FK
@@ -48,27 +41,12 @@ CREATE TABLE Jug_Opta_Categ (
     PRIMARY KEY (TipoCategoria,RangoI, TipoTorneo)
 );#Creada
 
-
-DROP TABLE Jug_Gana_Categ;
-CREATE TABLE Jug_Gana_Categ (
+CREATE TABLE Premio (
 	TipoCategoria VARCHAR(30), #PK, FK
-    RangoI INT(5), #PK, FK
-    TipoTorneo ENUM('A', 'B'), #PK, FK
-    Puesto INT, #PK
-    Importe DECIMAL(10,2),
-    PRIMARY KEY (TipoCategoria, RangoI, TipoTorneo, Puesto),
-    CONSTRAINT fk_categoria_jugador_torneo_tiene FOREIGN KEY (TipoCategoria, RangoI, TipoTorneo) REFERENCES Jug_Opta_Categ(TipoCategoria, RangoI, TipoTorneo) ON DELETE CASCADE ON UPDATE CASCADE);
-
-drop table Cat_Torneo_Premio;
-drop table Premio;
-CREATE TABLE Cat_Torneo_Premio (
-	TipoCategoria VARCHAR(30),#PK, FK
-    TipoTorneo ENUM('A', 'B'),#PK, FK
-    Puesto INT(3),#PK, FK
-    CONSTRAINT fk_cat_tiene FOREIGN KEY (TipoCategoria) REFERENCES Categoria (TipoCategoria) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_torneo_tiene FOREIGN KEY (TipoTorneo) REFERENCES Torneo (TipoTorneo) ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_premio_tiene FOREIGN KEY (Puesto) REFERENCES Premio (Puesto) ON DELETE CASCADE ON UPDATE CASCADE,
-	PRIMARY KEY(TipoCategoria,TipoTorneo, Puesto)
+    Puesto INT(3),#PK
+    Importe DECIMAL(10, 2),
+    PRIMARY KEY (TipoCategoria, Puesto),
+    CONSTRAINT fk_premio_categoria FOREIGN KEY (TipoCategoria) REFERENCES Categoria (TipoCategoria) ON DELETE CASCADE ON UPDATE CASCADE
 );#Creada
 
 
@@ -89,27 +67,56 @@ insert into Categoria values
 ('Hotel',8);
 select * from Categoria;
 
-insert into Cat_Torneo_Premio values
-('General','A',1),
-('General','A',1),
-('General','A',1),
-('General','A',1),
-('General','A',1),
-('General','A',1),
-('General','A',1),
-('General','A',1),
-('General','A',1),
-('General','B'),
-('SUB2400','A'),
-('SUB2200','A'),
-('SUB1800','B'),
-('SUB1600','B'),
-('SUB1400','B'),
-('CV','A'),
-('CV','B'),
-('Hotel','A'),
-('Hotel','B');
-select * from Cat_Torneo;
+insert into Premio values 
+('General', 1, 2300), -- General
+('General', 2, 1200),
+('General', 3, 650),
+('General', 4, 550),
+('General', 5, 500),
+('General', 6, 400),
+('General', 7, 300),
+('General', 8, 250),
+('General', 9, 200),
+('General', 10, 150),
+('General', 11, 100),
+('General', 12, 100),
+('SUB2400', 1, 225), -- 2400
+('SUB2400', 2, 150),
+('SUB2400', 3, 120),
+('SUB2400', 4, 100),
+('SUB2200', 1, 150), -- 2200
+('SUB2200', 2, 100),
+('SUB1800', 1, 150), -- 1800
+('SUB1800', 2, 100),
+('SUB1600', 1, 150), -- 1600
+('SUB1600', 2, 100),
+('SUB1400', 1, 150), -- 1400
+('SUB1400', 2, 100),
+('CV', 1, 500), -- CV
+('CV', 2, 400),
+('CV', 3, 300),
+('CV', 4, 200),
+('CV', 5, 100),
+('Hotel', 1, 125), -- Hotel
+('Hotel', 2, 125),
+('Hotel', 3, 125),
+('Hotel', 4, 125),
+('Hotel', 5, 125),
+('Hotel', 6, 125),
+('Hotel', 7, 125),
+('Hotel', 8, 125),
+('Hotel', 9, 125),
+('Hotel', 10, 125),
+('Hotel', 11, 125),
+('Hotel', 12, 125),
+('Hotel', 13, 125),
+('Hotel', 14, 125),
+('Hotel', 15, 125),
+('Hotel', 16, 125),
+('Hotel', 17, 125),
+('Hotel', 18, 125),
+('Hotel', 19, 125),
+('Hotel', 20, 125);
 
 SELECT * FROM Jugador WHERE ELO > 2400;
 
@@ -172,6 +179,7 @@ end//
 DELIMITER ;
 CALL jug_premios();
 
-truncate table Jug_Opta_Categ;
+-- truncate table Jug_Opta_Categ;
 
 select * from Jug_Opta_Categ;
+
