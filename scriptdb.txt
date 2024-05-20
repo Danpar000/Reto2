@@ -1,0 +1,177 @@
+DROP DATABASE IF EXISTS Reto2;
+CREATE DATABASE Reto2;
+
+USE Reto2;
+
+CREATE TABLE Torneo(
+TipoTorneo ENUM('A', 'B'),#PK
+    PRIMARY KEY (TipoTorneo)
+);#Creada
+
+CREATE TABLE Jugador (
+    RangoI INT(5),#PK
+    Titulo VARCHAR(10),
+    Nombre VARCHAR(50),
+    Federacion VARCHAR(20),
+    ELO INT(4),
+    Nacional INT(10),
+    FIDE_ID INT(10),
+    ID_Nacional INT(10),
+    OrigenClub VARCHAR(30),
+    Hotel BOOLEAN,
+    Comunidad_Valenciana BOOLEAN,
+    RangoF INT(5) DEFAULT NULL,
+    TipoTorneo ENUM('A', 'B'),#FK
+    PRIMARY KEY (RangoI, TipoTorneo),
+    CONSTRAINT fk_jug_torneo FOREIGN KEY (TipoTorneo) REFERENCES Torneo (TipoTorneo) ON DELETE CASCADE ON UPDATE CASCADE
+);#Creada
+
+CREATE TABLE Categoria (
+TipoCategoria VARCHAR(30),#PK
+    Prioridad INT(3),
+    PRIMARY KEY (TipoCategoria)
+);#Creada
+
+//
+CREATE TABLE Premio (
+    Puesto INT(3),#PK
+    Importe DECIMAL(10, 2),
+    PRIMARY KEY (Puesto)
+);#Creada
+
+CREATE TABLE Jug_Opta_Categ (
+	TipoCategoria VARCHAR(30),#PK, FK
+    RangoI INT(5),#PK, FK
+    TipoTorneo ENUM('A', 'B'),#FK
+    CONSTRAINT fk_jug_opt FOREIGN KEY (RangoI,TipoTorneo) REFERENCES Jugador (RangoI, TipoTorneo) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_prem_opt FOREIGN KEY (TipoCategoria) REFERENCES Categoria (TipoCategoria) ON DELETE CASCADE ON UPDATE CASCADE,
+    PRIMARY KEY (TipoCategoria,RangoI, TipoTorneo)
+);#Creada
+
+
+DROP TABLE Jug_Gana_Categ;
+CREATE TABLE Jug_Gana_Categ (
+	TipoCategoria VARCHAR(30), #PK, FK
+    RangoI INT(5), #PK, FK
+    TipoTorneo ENUM('A', 'B'), #PK, FK
+    Puesto INT, #PK
+    Importe DECIMAL(10,2),
+    PRIMARY KEY (TipoCategoria, RangoI, TipoTorneo, Puesto),
+    CONSTRAINT fk_categoria_jugador_torneo_tiene FOREIGN KEY (TipoCategoria, RangoI, TipoTorneo) REFERENCES Jug_Opta_Categ(TipoCategoria, RangoI, TipoTorneo) ON DELETE CASCADE ON UPDATE CASCADE);
+
+drop table Cat_Torneo_Premio;
+drop table Premio;
+CREATE TABLE Cat_Torneo_Premio (
+	TipoCategoria VARCHAR(30),#PK, FK
+    TipoTorneo ENUM('A', 'B'),#PK, FK
+    Puesto INT(3),#PK, FK
+    CONSTRAINT fk_cat_tiene FOREIGN KEY (TipoCategoria) REFERENCES Categoria (TipoCategoria) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_torneo_tiene FOREIGN KEY (TipoTorneo) REFERENCES Torneo (TipoTorneo) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_premio_tiene FOREIGN KEY (Puesto) REFERENCES Premio (Puesto) ON DELETE CASCADE ON UPDATE CASCADE,
+	PRIMARY KEY(TipoCategoria,TipoTorneo, Puesto)
+);#Creada
+
+
+SELECT * FROM Jugador;
+#Insert
+
+insert into Torneo values('A'),('B');
+select * from Torneo;
+
+insert into Categoria values
+('General',1),
+('SUB2400',2),
+('SUB2200',3),
+('SUB1800',4),
+('SUB1600',5),
+('SUB1400',6),
+('CV',7),
+('Hotel',8);
+select * from Categoria;
+
+insert into Cat_Torneo_Premio values
+('General','A',1),
+('General','A',1),
+('General','A',1),
+('General','A',1),
+('General','A',1),
+('General','A',1),
+('General','A',1),
+('General','A',1),
+('General','A',1),
+('General','B'),
+('SUB2400','A'),
+('SUB2200','A'),
+('SUB1800','B'),
+('SUB1600','B'),
+('SUB1400','B'),
+('CV','A'),
+('CV','B'),
+('Hotel','A'),
+('Hotel','B');
+select * from Cat_Torneo;
+
+SELECT * FROM Jugador WHERE ELO > 2400;
+
+SELECT * FROM Jugador WHERE HOTEL = 1;
+
+SELECT * FROM Jugador WHERE Comunidad_Valenciana = 1;
+
+
+-- Atentamente Manu
+delimiter //
+create procedure jug_premios ()
+begin
+declare v_RangoI int;
+declare v_torneo enum('A', 'B');
+declare v_ELO int;
+declare v_hotel boolean;
+declare v_cv boolean;
+declare fin integer default 0;
+declare cursor_jug cursor for select RangoI,TipoTorneo,ELO,Hotel,Comunidad_Valenciana from Jugador;
+declare continue handler for not found set fin=1;
+open cursor_jug;
+buc: repeat
+fetch cursor_jug into v_RangoI,v_torneo,v_ELO,v_hotel,v_cv;
+if fin then
+leave buc;
+end if;
+insert into Jug_Opta_Categ values
+('General',v_RangoI,v_torneo);
+if (v_ELO<2200 and v_torneo='A') then
+insert into Jug_Opta_Categ values #TipoCategoria,Puesto,RangoI,TipoTorneo
+('SUB2200',v_RangoI,v_torneo);
+end if;
+if (v_ELO<2400 and v_torneo='A') then
+insert into Jug_Opta_Categ values
+('SUB2400',v_RangoI,v_torneo);
+end if;
+if (v_ELO<1400 and v_torneo='B') then
+insert into Jug_Opta_Categ values
+('SUB1400',v_RangoI,v_torneo);
+end if;
+if (v_ELO<1600 and v_torneo='B') then
+insert into Jug_Opta_Categ values
+('SUB1600',v_RangoI,v_torneo);
+end if;
+if (v_ELO<1800 and v_torneo='B') then
+insert into Jug_Opta_Categ values
+('SUB1800',v_RangoI,v_torneo);
+end if;
+if (v_hotel=1) then
+insert into Jug_Opta_Categ values
+('Hotel',v_RangoI,v_torneo);
+end if;
+if (v_cv=1) then
+insert into Jug_Opta_Categ values
+('CV',v_RangoI,v_torneo);
+end if;
+until fin = 1 end repeat buc;
+close cursor_jug;
+end//
+DELIMITER ;
+CALL jug_premios();
+
+truncate table Jug_Opta_Categ;
+
+select * from Jug_Opta_Categ;
