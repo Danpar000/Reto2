@@ -75,6 +75,7 @@ public class DBUtils {
     }
 
 
+    /*
     @FXML
     public static ResultSet getupdateRows() throws SQLException{
         Statement statement = connection.createStatement();
@@ -85,6 +86,7 @@ public class DBUtils {
 
         //PreparedStatement pstmt = connection.prepareStatement(query);
     }
+     */
 
 
 
@@ -205,14 +207,14 @@ public class DBUtils {
                 alert.setTitle("Importación exitosa (2/2)");
                 alert.setHeaderText(null);
                 alert.setContentText("El resto de jugadores han sido importados correctamente.");
-                updateRows(getupdateRows());
+                //updateRows(getupdateRows());
                 alert.showAndWait();
             } else {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Importación exitosa");
                 alert.setHeaderText(null);
                 alert.setContentText("Se han importado los jugadores correctamente.");
-                updateRows(getupdateRows());
+                //updateRows(getupdateRows());
                 alert.showAndWait();
             }
 
@@ -237,5 +239,78 @@ public class DBUtils {
         //connection.close();
     }
 
-}
+    @FXML
+    protected void importarPosicion() throws SQLException {
 
+        Statement statement = DBUtils.connection.createStatement();
+
+        FileReader fr = null;
+        FileInputStream fich = null;
+        DataInputStream entrada = null;
+        try {
+            fich = new FileInputStream("Open A-Resultados.csv"); // | Open A-Resultados.csv | Open B-Resultados.csv
+            entrada = new DataInputStream(fich);
+            String cadena = entrada.readLine();
+            int rankini = 0;
+            int rankinF = 0;
+            StringBuilder exists = new StringBuilder();
+            char tipotorneo = 'A';
+            int contador = 0;
+            boolean buc = true;
+            while (cadena != null) {
+                if (contador>=5&&buc) {
+                    if (cadena.equals("::::::::::::::::")) {
+                        buc = false;
+                    }else {
+                        try {
+                            rankini = Integer.parseInt(cadena.split(":")[0]);
+                            rankinF = Integer.parseInt(cadena.split(":")[1]);
+                            String query = String.format("UPDATE Jugador SET RangoF = ? WHERE RangoI = ? AND TipoTorneo = ?");
+                            PreparedStatement pstmt = connection.prepareStatement(query);
+                            pstmt.setString(1, String.valueOf(rankinF));
+                            pstmt.setString(2, String.valueOf(rankini));
+                            pstmt.setString(3, String.valueOf(tipotorneo));
+                            pstmt.executeUpdate();
+                        } catch (ArrayIndexOutOfBoundsException | SQLIntegrityConstraintViolationException e) {
+                            System.out.println(e.getMessage());
+                        }
+                    }
+
+                }
+                if (contador<6){
+                    contador++;
+                }
+                cadena = entrada.readLine();
+            }
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Importación exitosa");
+            alert.setHeaderText(null);
+            alert.setContentText("Se han importado los resultados correctamente.");
+            // updateRows(getupdateRows());
+            alert.showAndWait();
+
+        } catch (IOException e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            alert.setContentText("Error, no se ha encontrado el archivo especificado.");
+            alert.showAndWait();
+            System.out.println(e.getMessage());
+        } finally {
+            try {
+                if (fr != null) {
+                    fr.close();
+                }
+            } catch (IOException e) {
+                System.out.println(e.getMessage());
+            }
+
+        }
+        statement.close();
+        //connection.close();
+    }
+
+
+
+}
