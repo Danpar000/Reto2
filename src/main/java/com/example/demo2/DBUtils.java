@@ -1,48 +1,31 @@
 package com.example.demo2;
 
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 
-import javax.print.DocFlavor;
-import javax.swing.table.TableColumn;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.IOException;
+import javax.naming.PartialResultException;
+import java.io.*;
 import java.sql.*;
+import java.util.Scanner;
 
 
 public class DBUtils {
-
-    // Conexion BD
+    private static String typeTorneo = "";
     private static Connection connection;
     private static Stage stage = new Stage();
-
-
-    @FXML
-    protected void updateRows(ResultSet resultSet) throws SQLException {
-        //ResultSet resultSet = DBUtils.getupdateRows();
-        while (resultSet.next()) {
-            System.out.println(resultSet);
-        }
-        //PreparedStatement pstmt = connection.prepareStatement(query);
-    }
-
     //private static ;
 
     public static void logIn(String username, String password) {
 
         try {
-            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/Reto2", username, password);
+            connection = DriverManager.getConnection("jdbc:mariadb://localhost:3306/Reto2", username, password);
 
             if (connection != null) {
-                changeScene("tournament.fxml", "Selecciona un torneo");
+                changeScene("tournament.fxml", "Selecciona un torneo", null);
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
@@ -62,7 +45,8 @@ public class DBUtils {
         }
     }
 
-    public static void changeScene(String fxmlfile, String title) throws IOException {
+    public static void changeScene(String fxmlfile, String title, String varTorneo) throws IOException {
+        typeTorneo = varTorneo;
         Parent root;
         FXMLLoader fxmlLoader;
         fxmlLoader = new FXMLLoader(DBUtils.class.getResource(fxmlfile));
@@ -71,35 +55,21 @@ public class DBUtils {
         stage.setTitle(title);
         stage.setScene(scene);
         stage.show();
-
     }
-
-
-    /*
-    @FXML
-    public static ResultSet getupdateRows() throws SQLException{
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM Jugador");
-        return resultSet;
-
-
-
-        //PreparedStatement pstmt = connection.prepareStatement(query);
-    }
-     */
-
 
 
     @FXML
     protected void importarJugadores() throws SQLException {
-
         Statement statement = connection.createStatement();
-
         FileReader fr = null;
         FileInputStream fich = null;
         DataInputStream entrada = null;
         try {
-            fich = new FileInputStream("Open A-R_Ini.csv"); // | Open A-R_Ini.csv | Open B-R_Ini.csv | Open A-R_Ini - Copy.csv |
+            if (typeTorneo.equals("A")) {
+                fich = new FileInputStream("Open A-R_Ini.csv"); // | Open A-R_Ini.csv | Open B-R_Ini.csv | Open A-R_Ini - Copy.csv |
+            } else {
+                fich = new FileInputStream("Open B-R_Ini.csv"); // | Open A-R_Ini.csv | Open B-R_Ini.csv | Open A-R_Ini - Copy.csv |
+            }
             entrada = new DataInputStream(fich);
             String cadena = entrada.readLine();
             int rankini = 0;
@@ -113,12 +83,12 @@ public class DBUtils {
             String club = null;
             String inf = "";
             StringBuilder exists = new StringBuilder();
-            char tipotorneo = 'A';
+            char tipotorneo = Character.valueOf(typeTorneo.charAt(0));
             int contador = 0;
             boolean buc = true;
             while (cadena != null) {
                 if (contador>=5&&buc) {
-                    if (cadena.equals(":::::::::")) {
+                    if (cadena.equals(":::::::::") || cadena.equals("::::::::::::::::")) {
                         buc = false;
                     }else {
                         boolean cv = false;
@@ -173,23 +143,16 @@ public class DBUtils {
                                 pstmt.executeUpdate();
 
                             } catch (SQLIntegrityConstraintViolationException e) {
-                                System.out.println(e.getMessage());
-                                /*
                                 Alert alert = new Alert(Alert.AlertType.ERROR);
                                 alert.setTitle("Error");
                                 alert.setHeaderText(null);
                                 alert.setContentText("Error, hay entradas duplicadas: " + exists);
                                 alert.showAndWait();
-
-                                 */
                             }
                         }
-                        //System.out.println("Jugador: rank= " + rankini + " titulo: "+ titulo + " nom: "+ nomjug + " nacionalidad: "+ nacionalidad + " elo: " + elo + " nac: " + nac + " fide_id: "+ fide_id + " id_nac: " + id_nac + " club: " + club + " inf: " + inf + " torneo: " + tipotorneo);
-
                     }
 
                 }
-
                 if (contador<6){
                     contador++;
                 }
@@ -207,14 +170,12 @@ public class DBUtils {
                 alert.setTitle("Importación exitosa (2/2)");
                 alert.setHeaderText(null);
                 alert.setContentText("El resto de jugadores han sido importados correctamente.");
-                //updateRows(getupdateRows());
                 alert.showAndWait();
             } else {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Importación exitosa");
                 alert.setHeaderText(null);
                 alert.setContentText("Se han importado los jugadores correctamente.");
-                //updateRows(getupdateRows());
                 alert.showAndWait();
             }
 
@@ -248,18 +209,22 @@ public class DBUtils {
         FileInputStream fich = null;
         DataInputStream entrada = null;
         try {
-            fich = new FileInputStream("Open A-Resultados.csv"); // | Open A-Resultados.csv | Open B-Resultados.csv
+            if (typeTorneo.equals("A")) {
+                fich = new FileInputStream("Open A-Resultados.csv"); // | Open A-Resultados.csv | Open B-Resultados.csv
+            } else {
+                fich = new FileInputStream("Open B-Resultados.csv"); // | Open A-Resultados.csv | Open B-Resultados.csv
+            }
             entrada = new DataInputStream(fich);
             String cadena = entrada.readLine();
             int rankini = 0;
             int rankinF = 0;
             StringBuilder exists = new StringBuilder();
-            char tipotorneo = 'A';
+            char tipotorneo = Character.valueOf(typeTorneo.charAt(0));
             int contador = 0;
             boolean buc = true;
             while (cadena != null) {
                 if (contador>=5&&buc) {
-                    if (cadena.equals("::::::::::::::::")) {
+                    if (cadena.equals("::::::::::::::::") || cadena.equals(":::::::::") || cadena.equals(":::::::::::::::::")) {
                         buc = false;
                     }else {
                         try {
@@ -287,7 +252,6 @@ public class DBUtils {
             alert.setTitle("Importación exitosa");
             alert.setHeaderText(null);
             alert.setContentText("Se han importado los resultados correctamente.");
-            // updateRows(getupdateRows());
             alert.showAndWait();
 
         } catch (IOException e) {
@@ -311,6 +275,59 @@ public class DBUtils {
         //connection.close();
     }
 
+    @FXML
+    protected void cambiarTorneo(String typeTorneo) {
+        System.out.println("terminar");
+    }
 
+
+    @FXML
+    protected void Exportar() throws SQLException {
+        PrintWriter salida = null;
+        int rangIni = 1;
+//        String torneo = "A";
+
+        int num = 0;
+        PreparedStatement procedimiento = connection.prepareStatement("call jug_premios()");
+        procedimiento.execute();
+        PreparedStatement psnumJug = connection.prepareStatement("SELECT COUNT(*) FROM Jugador WHERE TipoTorneo=?");
+        psnumJug.setString(1, typeTorneo);
+        ResultSet output = psnumJug.executeQuery();
+        output.next();
+        num = output.getInt(1);
+        try {
+            if (typeTorneo=="A") {salida = new PrintWriter("PremiosOptaJugA.txt");}
+            else {salida = new PrintWriter("PremiosOptaJugB.txt");}
+            salida.println("---------------------------------------------------------------------------------");
+            salida.println("                  TORNEO " + typeTorneo + " - PREMIOS QUE OPTA CADA JUGADOR     ");
+            while (rangIni<=num) {
+                String Jugador = "";
+                PreparedStatement ps = connection.prepareStatement("SELECT jo.RangoI, Nombre, jo.TipoCategoria FROM Jug_Opta_Categ jo JOIN Jugador j ON jo.RangoI=j.RangoI WHERE j.RangoI=? AND j.TipoTorneo=?");
+                ps.setInt(1,rangIni);
+                ps.setString(2,typeTorneo);
+                ResultSet rs = ps.executeQuery();
+                rs.next();
+                salida.println("---------------------------------------------------------------------------------");
+                Jugador = "| " + rs.getString("RangoI") + " | " + rs.getString("Nombre");;
+                Jugador = Jugador + " | " + rs.getString("TipoCategoria");
+                while (rs.next()) {
+                    Jugador = Jugador + ", " + rs.getString("TipoCategoria");
+                    rs.next();
+                }
+                rangIni++;
+                salida.println(Jugador);
+            }
+            salida.println("---------------------------------------------------------------------------------");
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Operación exitosa");
+            alert.setHeaderText(null);
+            alert.setContentText("El fichero se ha generado correctamente.");
+            alert.showAndWait();
+            salida.close();
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+
+    }
 
 }

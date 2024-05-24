@@ -17,9 +17,9 @@
    <children>
       <GridPane>
         <columnConstraints>
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="91.0" minWidth="10.0" prefWidth="39.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="203.0" minWidth="10.0" prefWidth="203.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="92.0" minWidth="10.0" prefWidth="50.0" />
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -74,9 +74,9 @@
             <Button mnemonicParsing="false" text="Editar" GridPane.columnIndex="6" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
             <Button mnemonicParsing="false" text="Borrar" GridPane.columnIndex="7" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
             <Button mnemonicParsing="false" onAction="#importarJugadores" text="Importar" GridPane.columnIndex="8" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
-            <Button mnemonicParsing="false" text="Volver" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
-            <Button mnemonicParsing="false" text="Cam. Tor." GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
-            <Button mnemonicParsing="false" text="Premios" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
+            <Button fx:id="idExportar" mnemonicParsing="false" onAction="#Exportar" text="Exportar Premios Optados" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
+            <Button mnemonicParsing="false" text="Cambiar Torneo" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="CENTER" />
+            <Button mnemonicParsing="false" text="Premios Ganados" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
             <Button mnemonicParsing="false" text="Calcular Premios" GridPane.columnIndex="6" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="8" GridPane.valignment="CENTER" />
             <Button fx:id="idImportarPosicion" mnemonicParsing="false" onAction="#importarPosicion" text="Importar posicion" GridPane.columnIndex="8" GridPane.rowIndex="8" />
          </children>

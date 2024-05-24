@@ -27,9 +27,9 @@ public class TournamentController {
     public void selectTournament(MouseEvent mouseEvent) throws IOException {
         System.out.println(mouseEvent);
         if (mouseEvent.getSource()==idTournamentA || mouseEvent.getSource()==idTournamentAimage){
-            DBUtils.changeScene("test.fxml", "Lista A");
+            DBUtils.changeScene("test.fxml", "Lista A", "A");
         } else if (mouseEvent.getSource()==idTournamentB || mouseEvent.getSource()==idTournamentBimage) {
-            DBUtils.changeScene("test.fxml", "Lista B");
+            DBUtils.changeScene("test.fxml", "Lista B", "B");
         }
     }
 }

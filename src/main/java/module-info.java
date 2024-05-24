@@ -3,7 +3,7 @@ module com.example.demo2 {
     requires javafx.fxml;
     requires java.sql;
     requires java.desktop;
-    requires mysql.connector.j;
+    requires org.mariadb.jdbc;
 
 
     opens com.example.demo2 to javafx.fxml;
