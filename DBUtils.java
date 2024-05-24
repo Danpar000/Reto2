@@ -198,5 +198,27 @@ public class DBUtils {
         //connection.close();
     }
 
+    public static void Exportar() throws SQLException {
+        Scanner sc = new Scanner(System.in);
+        PrintWriter salida = null;
+        int rangIni = 1;
+        String torneo = "A";
+    PreparedStatement psnumJug = connection.prepareStatement("SELECT COUNT(*) FROM Jugador WHERE TipoTorneo=" + torneo);
+    int numJug = Integer.parseInt(psnumJug.toString());
+        System.out.println(numJug);
+        /*try {
+            salida = new PrintWriter("PremiosOptaJug.txt");
+            salida.println("-----Categorias a las que opta cada jugador-----");
+            while (rangIni<= psnumJug) {
+                PreparedStatement ps = connection.prepareStatement("SELECT Nombre FROM Jug_Opta_Categ jo JOIN Jugador j ON jo.RangoI=j.RangoI WHERE RangoI=" + rangIni + " AND TipoTorneo=" + torneo);
+                salida.println();
+            }
+            salida.close();
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }*/
+
+    }
+
 }
 
