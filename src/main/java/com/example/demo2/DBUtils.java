@@ -276,7 +276,7 @@ public class DBUtils {
     }
 
     @FXML
-    protected void cambiarTorneo(String typeTorneo) {
+    protected void cambiarTorneo() {
         System.out.println("terminar");
     }
 
