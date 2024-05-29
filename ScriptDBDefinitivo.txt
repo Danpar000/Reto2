@@ -22,6 +22,7 @@ CREATE TABLE Jugador (
     Comunidad_Valenciana BOOLEAN,
     RangoF INT(5) DEFAULT NULL,
     TipoTorneo ENUM('A', 'B'),#FK
+    Descalificado BOOLEAN,
     PRIMARY KEY (RangoI, TipoTorneo),
     CONSTRAINT fk_jug_torneo FOREIGN KEY (TipoTorneo) REFERENCES Torneo (TipoTorneo) ON DELETE CASCADE ON UPDATE CASCADE
 );#Creada
@@ -65,7 +66,7 @@ insert into Categoria values
 ('Hotel',8);
 select * from Categoria;
 
-insert into Premio values
+insert into Premio values 
 ('General', 1, 2300, 0), -- General
 ('General', 2, 1200, 0),
 ('General', 3, 650, 0),
@@ -116,6 +117,7 @@ insert into Premio values
 ('Hotel', 19, 125, 0),
 ('Hotel', 20, 125, 0);
 
+
 -- Calcular Categorias Optadas por Jugador
 delimiter //
 create procedure jug_premios ()
@@ -128,7 +130,7 @@ declare v_cv boolean;
 declare fin integer default 0;
 declare cursor_jug cursor for select RangoI,TipoTorneo,ELO,Hotel,Comunidad_Valenciana from Jugador;
 declare continue handler for not found set fin=1;
-delete from Jug_Opta_Categ;
+truncate Jug_Opta_Categ;
 open cursor_jug;
 buc: repeat
 fetch cursor_jug into v_RangoI,v_torneo,v_ELO,v_hotel,v_cv;
@@ -171,85 +173,104 @@ end//
 DELIMITER ;
 CALL jug_premios();
 
-
-
+select * from Jug_Opta_Categ where RangoI = 3 AND TipoTorneo='B';
+SELECT jo.RangoI, Nombre, jo.TipoCategoria, jo.TipoTorneo FROM Jug_Opta_Categ jo JOIN Jugador j ON jo.RangoI=j.RangoI AND jo.TipoTorneo=j.TipoTorneo WHERE jo.RangoI=3 AND j.TipoTorneo='A';
 
 drop procedure if Exists ActualizarTempPremios;
 DELIMITER //
-CREATE PROCEDURE GetTempPremios()
+CREATE PROCEDURE GetTempPremios(tipotorneocheck ENUM('A', 'B'))
 BEGIN
     DROP TEMPORARY TABLE IF EXISTS TempPremios;
-	CREATE TEMPORARY TABLE TempPremios AS
-	SELECT jo.TipoTorneo, Puesto, jo.TipoCategoria, Importe, Prioridad FROM Jug_Opta_Categ jo JOIN Jugador j ON j.RangoI=jo.RangoI
-	JOIN Categoria c ON jo.TipoCategoria=c.TipoCategoria JOIN Premio p ON c.TipoCategoria=p.TipoCategoria GROUP BY Puesto, TipoCategoria;
-	alter table TempPremios add column RangoI INT(5);
-	alter table TempPremios add column RangoF INT(5);
+    CREATE TEMPORARY TABLE TempPremios AS
+    SELECT jo.TipoTorneo, Puesto, jo.TipoCategoria, Importe, Prioridad FROM Jug_Opta_Categ jo JOIN Jugador j ON j.RangoI=jo.RangoI 
+    JOIN Categoria c ON jo.TipoCategoria=c.TipoCategoria JOIN Premio p ON c.TipoCategoria=p.TipoCategoria WHERE jo.TipoTorneo=tipotorneocheck
+    GROUP BY Puesto, TipoCategoria ORDER BY Importe DESC, Prioridad ASC, Puesto DESC;
+    alter table TempPremios add column RangoI INT(5);
+    alter table TempPremios add column RangoF INT(5);
 END //
 DELIMITER ;
 
 -- select * from TempPremios;
-call GetTempPremios();
-
+-- call GetTempPremios();
+select * from Jug_Opta_Categ where RangoI = 41 and TipoTorneo='A';
 
 drop procedure if Exists test_gan;
 DELIMITER //
-create procedure test_gan(num int, tipotorneocheck ENUM('A', 'B'))
-begin
-declare fin int default 0;
-declare v_RFinal int;
-declare v_RInicial int;
-declare v_Torneo enum('A','B');
-declare v_TipoCat varchar(30);
-declare v_TipoCatAnt varchar(30);
-declare v_Importe decimal(10,2);
-declare v_ImporteAnt decimal(10,2) default 0;
-declare v_Prioridad int(3);
-declare v_PrioridadAnt int(3) default 0;
-declare v_LimitJugador int;
-declare c_tgana cursor for select jo.RangoI,jo.TipoTorneo,jo.TipoCategoria,RangoF
-from Jugador j join Jug_Opta_Categ jo on j.RangoI=jo.RangoI
-where RangoF=num and j.TipoTorneo=tipotorneocheck;
-DECLARE CONTINUE HANDLER FOR NOT FOUND SET fin = 1;
-SELECT COUNT(*) INTO @v_LimitJugador FROM Jugador WHERE TipoTorneo = tipotorneocheck;
-OPEN c_tgana;
-fetch c_tgana into v_RInicial,v_Torneo,v_TipoCat,v_RFinal;
-WHILE (fin=0) DO
-select @v_ImpMax:=  max(Importe) from TempPremios where TipoCategoria=v_TipoCat and RangoI is null;
-select @v_Importe:= Importe from TempPremios where TipoCategoria=v_TipoCat and RangoI is null and Importe=@v_ImpMax limit 1;
-select @v_Prioridad:= Prioridad from TempPremios where TipoCategoria=v_TipoCat and RangoI is null and Importe=@v_ImpMax limit 1;
-if (@v_Importe>v_ImporteAnt) then
-set v_TipoCatAnt=v_TipoCat;
-set v_ImporteAnt=@v_Importe;
-set v_PrioridadAnt=@v_Prioridad;
-elseif (@v_Importe=v_ImporteAnt) then
-if (@v_Prioridad<v_PrioridadAnt) then
-set v_TipoCatAnt=v_TipoCat;
-set v_ImporteAnt=@v_Importe;
-set v_PrioridadAnt=@v_Prioridad;
-end if;
-end if;
-fetch c_tgana into v_RInicial,v_Torneo,v_TipoCat,v_RFinal;
-END WHILE;
-update TempPremios set RangoI=v_RInicial, RangoF=v_RFinal where TipoCategoria=v_TipoCatAnt and Importe=v_ImporteAnt and Prioridad=v_PrioridadAnt and TipoTorneo=tipotorneocheck and RangoI is null limit 1;
-CLOSE c_tgana;
-end//
+
+CREATE PROCEDURE test_gan(num INT, tipotorneocheck ENUM('A', 'B'))
+BEGIN
+    DECLARE fin INT DEFAULT 0;
+    DECLARE v_RFinal INT;
+    DECLARE v_RInicial INT;
+    DECLARE v_Torneo ENUM('A','B');
+    DECLARE v_TipoCat VARCHAR(30);
+    DECLARE v_TipoCatAnt VARCHAR(30);
+    DECLARE v_Importe DECIMAL(10,2);
+    DECLARE v_ImporteAnt DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_Prioridad INT(3);
+    DECLARE v_PrioridadAnt INT(3) DEFAULT 0;
+    DECLARE v_LimitJugador INT;
+    DECLARE c_tgana CURSOR FOR
+        SELECT jo.RangoI, jo.TipoTorneo, jo.TipoCategoria, RangoF
+        FROM Jugador j
+        JOIN Jug_Opta_Categ jo ON j.RangoI = jo.RangoI AND j.TipoTorneo = jo.TipoTorneo
+        JOIN Categoria c ON jo.TipoCategoria = c.TipoCategoria
+        WHERE RangoF = num AND jo.TipoTorneo = tipotorneocheck AND Descalificado = false
+        ORDER BY Prioridad, RangoF;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET fin = 1;
+    OPEN c_tgana;
+    bucle: LOOP
+        FETCH c_tgana INTO v_RInicial, v_Torneo, v_TipoCat, v_RFinal;
+        IF fin = 1 THEN
+            LEAVE bucle;
+        END IF;
+        
+        SELECT MAX(Importe), MAX(Prioridad) INTO v_Importe, v_Prioridad
+        FROM TempPremios
+        WHERE TipoCategoria = v_TipoCat AND RangoI IS NULL;
+        
+        IF v_Importe IS NOT NULL AND v_Prioridad IS NOT NULL THEN
+            IF v_Importe > v_ImporteAnt THEN
+                SET v_TipoCatAnt = v_TipoCat;
+                SET v_ImporteAnt = v_Importe;
+                SET v_PrioridadAnt = v_Prioridad;
+            ELSEIF v_Importe = v_ImporteAnt THEN
+                CASE v_TipoCat
+                    WHEN 'General' THEN SET v_PrioridadAnt = 1;
+                    WHEN 'SUB2400' THEN SET v_PrioridadAnt = 2;
+                    WHEN 'SUB2200' THEN SET v_PrioridadAnt = 3;
+                    WHEN 'SUB1800' THEN SET v_PrioridadAnt = 4;
+                    WHEN 'SUB1600' THEN SET v_PrioridadAnt = 5;
+                    WHEN 'SUB1400' THEN SET v_PrioridadAnt = 6;
+                    WHEN 'CV' THEN SET v_PrioridadAnt = 7;
+                    WHEN 'Hotel' THEN SET v_PrioridadAnt = 8;
+                END CASE;
+                IF v_Prioridad < v_PrioridadAnt THEN
+                    SET v_TipoCatAnt = v_TipoCat;
+                    SET v_ImporteAnt = v_Importe;
+                    SET v_PrioridadAnt = v_Prioridad;
+                END IF;
+            END IF;
+        END IF;
+    END LOOP bucle;
+    
+    UPDATE TempPremios
+    SET RangoI = v_RInicial, RangoF = v_RFinal
+    WHERE TipoCategoria = v_TipoCatAnt AND RangoI IS NULL
+    LIMIT 1;
+    
+    CLOSE c_tgana;
+END//
 DELIMITER ;
-select * from TempPremios;
-
-SELECT COUNT(*) FROM Jugador WHERE TipoTorneo='A';
-
-select * from Jug_Opta_Categ where TipoTorneo='B';
-
-
-select * from Jugador where TipoTorneo='B';
 
 DROP PROCEDURE IF EXISTS bucle;
 DELIMITER //
 CREATE PROCEDURE bucle(tipotorneocheck ENUM('A', 'B'))
 BEGIN
 	DECLARE v_RFinalIterar INT default 1;
-    SELECT COUNT(*) INTO @v_LimitJugador FROM Jugador WHERE TipoTorneo = tipotorneocheck;
-    UPDATE TempPremios SET RangoI = NULL, RangoF = NULL;
+    SELECT COUNT(*) INTO @v_LimitJugador FROM Jugador WHERE TipoTorneo = tipotorneocheck AND Descalificado = false;
+    -- UPDATE TempPremios SET RangoI = NULL, RangoF = NULL;
+    call GetTempPremios(tipotorneocheck);
     WHILE (v_RFinalIterar <= @v_LimitJugador) DO
 		CALL test_gan(v_RFinalIterar, tipotorneocheck);
         set v_RFinalIterar = v_RFinalIterar + 1;
@@ -257,22 +278,18 @@ BEGIN
 END//
 DELIMITER ;
 
+select * from Jugador;
+update Jugador set Descalificado = True WHERE RangoI = 1 AND TipoTorneo = "A";
 CALL jug_premios();
 CALL bucle('A');
+select TipoTorneo, Puesto, TipoCategoria, Importe, Prioridad, RangoF, RangoI from TempPremios ORDER BY Prioridad, Puesto, RangoF ASC;
 
 select * from TempPremios;
+
+select * from Jug_Opta_Categ;
 
 # Procedimientos a ejecutar:
 # 1) jug_premios() - Calcula las categorias a las que opta el jugador
 # 2) GetTempPremios() - Para calcular en la tabla temporal los premios que PUEDE GANAR el jugador
 # 3) bucle(TIPO-TORNEO) - Para iterar en test_gan los rangos finales
 # 4*) test_gan(RangoF, TIPO-TORNEO) - Asignar premios en tabla temporal * Se ejecuta automáticamente con el procedimiento bucle();
-
-select * from Jugador;
-select * from Jug_Opta_Categ WHERE TipoTorneo='A';
-call jug_premios();
-call GetTempPremios();
-select * from TempPremios where TipoTorneo='A';
-call bucle('B');
-
-select * from Jugador;
