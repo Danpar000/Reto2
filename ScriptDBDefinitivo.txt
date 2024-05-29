@@ -279,14 +279,23 @@ END//
 DELIMITER ;
 
 select * from Jugador;
-update Jugador set Descalificado = True WHERE RangoI = 1 AND TipoTorneo = "A";
+select * from Jug_Opta_Categ;
+
 CALL jug_premios();
 CALL bucle('A');
+
 select TipoTorneo, Puesto, TipoCategoria, Importe, Prioridad, RangoF, RangoI from TempPremios ORDER BY Prioridad, Puesto, RangoF ASC;
+
+# select correcta
+select TipoCategoria, Puesto, Importe, Nombre, t.RangoF, t.RangoI from TempPremios t JOIN Jugador j ON j.RangoI=t.RangoI AND j.TipoTorneo=t.TipoTorneo ORDER BY Prioridad, Puesto, RangoF ASC;
 
 select * from TempPremios;
 
 select * from Jug_Opta_Categ;
+
+SELECT * FROM Jugador WHERE RangoF IS null OR RangoF=0 and TipoTorneo='A';
+
+update Jugador set RangoF=null where RangoI=1 AND TipoTorneo='A';
 
 # Procedimientos a ejecutar:
 # 1) jug_premios() - Calcula las categorias a las que opta el jugador
