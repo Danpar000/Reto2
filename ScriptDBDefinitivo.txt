@@ -302,3 +302,4 @@ update Jugador set RangoF=null where RangoI=1 AND TipoTorneo='A';
 # 2) GetTempPremios() - Para calcular en la tabla temporal los premios que PUEDE GANAR el jugador
 # 3) bucle(TIPO-TORNEO) - Para iterar en test_gan los rangos finales
 # 4*) test_gan(RangoF, TIPO-TORNEO) - Asignar premios en tabla temporal * Se ejecuta automáticamente con el procedimiento bucle();
+# add | ORDER BY Puesto ASC
