@@ -576,7 +576,7 @@ public class TorneoXController implements Initializable {
     protected void importarPosicion() throws SQLException {
 
         Statement statement = DBUtils.connection.createStatement();
-        PreparedStatement pstmt = connection.prepareStatement("SELECT * FROM JUGADOR WHERE TipoTorneo=?");
+        PreparedStatement pstmt = connection.prepareStatement("SELECT * FROM Jugador WHERE TipoTorneo=?");
         pstmt.setString(1, typeTorneo);
         ResultSet rs = pstmt.executeQuery();
         if (!rs.first()) {
@@ -665,7 +665,7 @@ public class TorneoXController implements Initializable {
     @FXML
     protected void Exportar() throws SQLException {
         Connection connection = DBUtils.connection;
-        PreparedStatement pstmt = connection.prepareStatement("SELECT * FROM JUGADOR WHERE TipoTorneo=?");
+        PreparedStatement pstmt = connection.prepareStatement("SELECT * FROM Jugador WHERE TipoTorneo=?");
         pstmt.setString(1, typeTorneo);
         ResultSet rs = pstmt.executeQuery();
         if (!rs.first()) {
