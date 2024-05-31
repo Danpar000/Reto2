@@ -283,7 +283,7 @@ public class TorneoXController implements Initializable {
     @FXML
     protected void calcularPremios(MouseEvent event) throws IOException, SQLException {
         Connection connection = DBUtils.connection;
-        PreparedStatement pstmt = connection.prepareStatement("SELECT * FROM JUGADOR WHERE TipoTorneo=?");
+        PreparedStatement pstmt = connection.prepareStatement("SELECT * FROM Jugador WHERE TipoTorneo=?");
         pstmt.setString(1, typeTorneo);
         ResultSet rs = pstmt.executeQuery();
         if (!rs.first()) {
@@ -293,7 +293,7 @@ public class TorneoXController implements Initializable {
             alert.setContentText("No puedes calcular premios sin los jugadores.");
             alert.showAndWait();
         } else {
-            pstmt = connection.prepareStatement("SELECT * FROM JUGADOR WHERE RangoF IS null AND TipoTorneo=? OR RangoF=0 AND TipoTorneo=?");
+            pstmt = connection.prepareStatement("SELECT * FROM Jugador WHERE RangoF IS null AND TipoTorneo=? OR RangoF=0 AND TipoTorneo=?");
             pstmt.setString(1, typeTorneo);
             pstmt.setString(2, typeTorneo);
             rs = pstmt.executeQuery();
